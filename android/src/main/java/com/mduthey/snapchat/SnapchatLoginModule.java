@@ -1,9 +1,13 @@
 package com.mduthey.snapchat;
 
+import android.app.Activity;
+import android.content.pm.PackageManager;
+
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -16,7 +20,21 @@ import com.snapchat.kit.sdk.login.networking.FetchUserDataCallback;
 import com.snapchat.kit.sdk.login.models.MeData;
 import com.snapchat.kit.sdk.login.models.UserDataResponse;
 
+import com.snapchat.kit.sdk.SnapCreative;
+import com.snapchat.kit.sdk.creative.api.SnapCreativeKitApi;
+import com.snapchat.kit.sdk.creative.exceptions.SnapMediaSizeException;
+import com.snapchat.kit.sdk.creative.media.SnapMediaFactory;
+import com.snapchat.kit.sdk.creative.media.SnapPhotoFile;
+import com.snapchat.kit.sdk.creative.media.SnapVideoFile;
+import com.snapchat.kit.sdk.creative.media.SnapSticker;
+import com.snapchat.kit.sdk.creative.models.SnapContent;
+import com.snapchat.kit.sdk.creative.models.SnapLiveCameraContent;
+import com.snapchat.kit.sdk.creative.models.SnapPhotoContent;
+import com.snapchat.kit.sdk.creative.models.SnapVideoContent;
+
 public class SnapchatLoginModule extends ReactContextBaseJavaModule {
+
+    private static final String snapchatScheme = "com.snapchat.android";
 
     private final ReactApplicationContext reactContext;
     private final LoginStateController.OnLoginStateChangedListener mLoginStateChangedListener =
@@ -124,6 +142,142 @@ public class SnapchatLoginModule extends ReactContextBaseJavaModule {
         } catch (Exception e) {
             promise.resolve("{\"accessToken\": \"null\", \"error\": \"" + e.toString() + "\"}");
         }
+    }
+
+    @ReactMethod
+    public void sharePhotoResolved(
+                @Nullable Object resolvedPhoto,
+                @Nullable String photoUrl,
+                @Nullable Object stickerResolved,
+                @Nullable String stickerUrl,
+                @Nullable float stickerPosX,
+                @Nullable float stickerPosY,
+                @Nullable String attachmentUrl,
+                @Nullable String caption,
+                Promise promise
+            ) {
+
+            Object photo = resolvedPhoto != null ? resolvedPhoto : photoUrl;
+            Object sticker = stickerResolved != null ? stickerResolved : stickerUrl;
+
+            shareWithPhoto(photo, null, sticker, stickerPosX, stickerPosY, attachmentUrl, caption, promise);
+    }
+    @ReactMethod
+    public void shareVideoAtUrl(
+                @Nullable String videoUrl,
+                @Nullable Object stickerResolved,
+                @Nullable String stickerUrl,
+                @Nullable float stickerPosX,
+                @Nullable float stickerPosY,
+                @Nullable String attachmentUrl,
+                @Nullable String caption,
+                Promise promise
+            ) {
+            Object sticker = stickerResolved != null ? stickerResolved : stickerUrl;
+
+            shareWithPhoto(null, videoUrl, sticker, stickerPosX, stickerPosY, attachmentUrl, caption, promise);
+    }
+
+    private void canOpenUrl(String packageScheme, Promise promise){
+        try{
+          Activity activity = getCurrentActivity();
+          activity.getPackageManager().getPackageInfo(packageScheme, PackageManager.GET_ACTIVITIES);
+          promise.resolve(true);
+        } catch (PackageManager.NameNotFoundException e) {
+          promise.resolve(false);
+        } catch (Exception e) {
+          promise.reject(new JSApplicationIllegalArgumentException(
+                  "Could not check if URL '" + packageScheme + "' can be opened: " + e.getMessage()));
+        }
+      }
+
+    private void shareWithPhoto(
+          @Nullable Object photoImageOrUrl,
+          @Nullable String videoUrl,
+          @Nullable Object stickerImageOrUrl,
+          @Nullable float stickerPosX,
+          @Nullable float stickerPosY,
+          @Nullable String attachmentUrl,
+          @Nullable String caption,
+          Promise promise
+      ) {
+        try {
+          Activity activity = getCurrentActivity();
+          SnapMediaFactory snapMediaFactory = SnapCreative.getMediaFactory(activity);
+          SnapContent snapContent;
+          SnapCreativeKitApi snapCreativeKitApi = SnapCreative.getApi(activity);
+
+
+
+          if (videoUrl != null) {
+              SnapVideoFile videoFile;
+              try {
+                 videoFile = snapMediaFactory.getSnapVideoFromFile(new File(videoUrl));
+              } catch (SnapMediaSizeException|SnapVideoLengthException e) {
+                 promise.reject(e);
+                 return;
+              }
+              snapContent = new SnapVideoContent(videoFile)
+
+          } else if (photoImageOrUrl instanceof String) {
+              SnapPhotoFile photoFile;
+              try {
+                 photoFile = snapMediaFactory.getSnapPhotoFromFile(new File(photoImageOrUrl));
+              } catch (SnapMediaSizeException e) {
+                 promise.reject(e);
+                 return;
+              }
+              snapContent = new SnapPhotoContent(photoFile);
+          } else {
+              snapContent = new SnapLiveCameraContent();
+          }
+
+          if (stickerImageOrUrl != null) {
+              SnapSticker snapSticker = null;
+
+              String stickerUrl = null;
+              if (stickerImageOrUrl instanceof ReadableMap) {
+                stickerUrl = stickerImageOrUrl.hasKey("uri") ? stickerOptions.getString("uri") : null;
+              } else if (stickerImageOrUrl instanceof String) {
+                stickerUrl = stickerImageOrUrl;
+              }
+              try {
+                  snapSticker = snapMediaFactory.getSnapStickerFromFile(new File(stickerUrl));
+                  if (stickerPosX != null) {
+                    snapSticker.setPosX(stickerPosX);
+                  }
+                  if (stickerPosY != null) {
+                    snapSticker.setPosY(stickerPosY);
+                  }
+
+                  snapContent.setSnapSticker(snapSticker);
+              } catch (SnapStickerSizeException e) {
+                  promise.reject(e);
+                  return;
+              }
+
+          }
+
+          if (caption != null) {
+            snapContent.setCaptionText(caption);
+          }
+          if (attachmentUrl != null) {
+            snapContent.setAttachmentUrl(attachmentUrl);
+          }
+
+          snapCreativeKitApi.send(snapContent);
+
+          promise.resolve("success");
+        } catch (SnapMediaSizeException e) {
+          promise.reject("Snapchat Exception", e.getMessage());
+        } catch (Exception e){
+          promise.reject("An unknown error occured", e);
+        }
+      }
+
+    @ReactMethod
+    public void isSnapchatAvailable(final Promise promise){
+      canOpenUrl(snapchatScheme, promise);
     }
 
 }

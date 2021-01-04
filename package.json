@@ -1,5 +1,5 @@
 {
-  "name": "react-native-snapchat-kit",
+  "name": "imokhles-react-native-snapchat-kit",
   "title": "React Native Snapchat Kit",
   "version": "1.0.0",
   "description": "Bridge to use Snapchat Frameworks in react native",
@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/QuentinbTahi/react-snap-kit",
-    "baseUrl": "https://github.com/QuentinbTahi/react-snap-kit"
+    "url": "git+https://github.com/imokhles/react-native-app-tour.git",
+    "baseUrl": "https://github.com/imokhles/react-native-app-tour.git"
   },
   "keywords": [
     "react-native"
   ],
   "author": {
-    "name": "Quentin B",
-    "email": "quentin.beaudouin@gmail.com"
+    "name": "Mokhlas Hussein",
+    "email": "mokhlashussein@aol.com"
   },
   "license": "MIT",
   "licenseFilename": "LICENSE",

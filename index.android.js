@@ -14,7 +14,7 @@ export default class SnapchatLogin {
       const succeededListener = this.addListener('LoginSucceeded', (res) => {
         succeededListener.remove();
         failedListener.remove();
-        this.getUserInfo().then(resolve).catch(reject); 
+        this.getUserInfo().then(resolve).catch(reject);
       });
       const failedListener = this.addListener('LoginFailed', (res) => {
         succeededListener.remove();
@@ -50,5 +50,37 @@ export default class SnapchatLogin {
         })
         .catch(e => reject(e));
     });
+  }
+
+  static async sharePhoto(photoImageSourceOrUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption) {
+    const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
+
+    const resolvedPhoto = resolveAssetSource(photoImageSourceOrUrl);
+    const resolvedSticker = resolveAssetSource(stickerImageSourceOrUrl);
+
+    const { result } = await RNSnapchatKit.sharePhotoResolved(
+        resolvedPhoto, resolvedPhoto == null ? photoImageSourceOrUrl : null,
+        resolvedSticker, resolvedSticker == null ? stickerImageSourceOrUrl : null,
+        stickerPosX, stickerPosY,
+        attachmentUrl,
+        caption).catch(e => { reject(e) });
+
+    return result;
+  }
+
+
+  static async shareVideoAtUrl(videoUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption) {
+    const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
+
+    const resolvedSticker = resolveAssetSource(stickerImageSourceOrUrl);
+
+    const { result } = await RNSnapchatKit.shareVideoAtUrl(
+        videoUrl,
+        resolvedSticker, resolvedSticker == null ? stickerImageSourceOrUrl : null,
+        stickerPosX, stickerPosY,
+        attachmentUrl,
+        caption).catch(e => { reject(e) });
+
+    return result;
   }
 }

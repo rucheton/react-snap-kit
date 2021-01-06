@@ -19,7 +19,7 @@
     return self;
 }
 
-+ (BOOL)requiresMainQueueSetup {  
++ (BOOL)requiresMainQueueSetup {
     return YES;
 }
 
@@ -117,33 +117,28 @@ RCT_REMAP_METHOD(getAccessToken,
 #pragma mark --------- Creative Kit ------------
 //******************************************************************
 
-RCT_EXPORT_METHOD(sharePhotoResolved:(NSDictionary *)resolvedPhoto url:(NSString *)photoUrl
-                  stickerResolved:(NSDictionary *)stickerResolved stickerUrl:(NSString *)stickerUrl
+RCT_EXPORT_METHOD(sharePhotoResolved:(NSString *)photoUrl stickerUrl:(NSString *)stickerUrl
                   stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY
                   attachmentUrl:(NSString *)attachmentUrl
                   caption:(NSString *)caption
                   resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
 
-    NSObject *photo = resolvedPhoto != NULL ? resolvedPhoto : photoUrl;
-    NSObject *sticker = stickerResolved != NULL ? stickerResolved : stickerUrl;
-    [self shareWithPhoto:photo videoUrl:NULL sticker:sticker stickerPosX:stickerPosX stickerPosY:stickerPosY attachmentUrl:attachmentUrl caption:caption resolver:resolve rejecter:reject];
+    [self shareWithPhoto:photoUrl videoUrl:NULL sticker:sticker stickerPosX:stickerPosX stickerPosY:stickerPosY attachmentUrl:attachmentUrl caption:caption resolver:resolve rejecter:reject];
 
 }
 
 
-RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl
-                  stickerResolved:(NSDictionary *)stickerResolved stickerUrl:(NSString *)stickerUrl
+RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl stickerUrl:(NSString *)stickerUrl
                   stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY
                   attachmentUrl:(NSString *)attachmentUrl
                   caption:(NSString *)caption
                   resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
 
-    NSObject *sticker = stickerResolved != NULL ? stickerResolved : stickerUrl;
-    [self shareWithPhoto:NULL videoUrl:videoUrl sticker:sticker stickerPosX:stickerPosX stickerPosY:stickerPosY attachmentUrl:attachmentUrl caption:caption resolver:resolve rejecter:reject];
+    [self shareWithPhoto:NULL videoUrl:videoUrl sticker:stickerUrl stickerPosX:stickerPosX stickerPosY:stickerPosY attachmentUrl:attachmentUrl caption:caption resolver:resolve rejecter:reject];
 
 }
 
-- (void) shareWithPhoto:(NSObject *)photoImageOrUrl videoUrl:(NSString *)videoUrl sticker:(NSObject *)stickerImageOrUrl stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY attachmentUrl:(NSString *)attachmentUrl caption:(NSString *)caption resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject {
+- (void) shareWithPhoto:(NSString *)photoImageOrUrl videoUrl:(NSString *)videoUrl sticker:(NSString *)stickerImageOrUrl stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY attachmentUrl:(NSString *)attachmentUrl caption:(NSString *)caption resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject {
 
     NSObject<SCSDKSnapContent> *snap;
 
@@ -151,30 +146,18 @@ RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl
         NSURL *url = [self urlForString:videoUrl];
         SCSDKSnapVideo *video = [[SCSDKSnapVideo alloc] initWithVideoUrl:url];
         snap = [[SCSDKVideoSnapContent alloc] initWithSnapVideo:video];
-    }
-    else if ([photoImageOrUrl isKindOfClass:[NSString class]]) {
+    } else if ([photoImageOrUrl length] == 0) {
         NSURL *url = [self urlForString:(NSString *)photoImageOrUrl];
         SCSDKSnapPhoto *photo = [[SCSDKSnapPhoto alloc] initWithImageUrl:url];
         snap = [[SCSDKPhotoSnapContent alloc] initWithSnapPhoto:photo];
-    }
-    else if ([photoImageOrUrl isKindOfClass:[NSDictionary class]]) {
-        UIImage *image = [RCTConvert UIImage:photoImageOrUrl];
-        SCSDKSnapPhoto *photo = [[SCSDKSnapPhoto alloc] initWithImage:image];
-        snap = [[SCSDKPhotoSnapContent alloc] initWithSnapPhoto:photo];
-    }
-    else {
+    } else {
         snap = [SCSDKNoSnapContent new];
     }
 
-    if (stickerImageOrUrl) {
+    if ([stickerImageOrUrl length] == 0) {
          SCSDKSnapSticker *snapSticker;
-         if ([stickerImageOrUrl isKindOfClass:[NSString class]]) {
-             NSURL *url = [self urlForString:(NSString *)stickerImageOrUrl];
-             snapSticker = [[SCSDKSnapSticker alloc] initWithStickerUrl:url isAnimated:NO];
-         }
-         else if ([stickerImageOrUrl isKindOfClass:[UIImage class]]) {
-             snapSticker = [[SCSDKSnapSticker alloc] initWithStickerImage:(UIImage *)stickerImageOrUrl];
-         }
+         NSURL *url = [self urlForString:(NSString *)stickerImageOrUrl];
+         snapSticker = [[SCSDKSnapSticker alloc] initWithStickerUrl:url isAnimated:NO];
 
          if (stickerPosX) {
              snapSticker.posX = stickerPosX;

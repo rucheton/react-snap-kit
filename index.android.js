@@ -40,27 +40,23 @@ export default class SnapchatLogin {
   static getUserInfo() {
     return new Promise((resolve, reject) => {
       RNSnapchatKit.fetchUserData()
-        .then((tmp) => {
-          const data = JSON.parse(tmp);
-          if (data === null) {
-            resolve(null);
-          } else {
-            resolve(data);
-          }
-        })
-        .catch(e => reject(e));
+          .then((tmp) => {
+            const data = JSON.parse(tmp);
+            if (data === null) {
+              resolve(null);
+            } else {
+              resolve(data);
+            }
+          })
+          .catch(e => reject(e));
     });
   }
 
   static async sharePhoto(photoImageSourceOrUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption) {
-    const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
-
-    const resolvedPhoto = resolveAssetSource(photoImageSourceOrUrl);
-    const resolvedSticker = resolveAssetSource(stickerImageSourceOrUrl);
 
     const { result } = await RNSnapchatKit.sharePhotoResolved(
-        resolvedPhoto, resolvedPhoto == null ? photoImageSourceOrUrl : null,
-        resolvedSticker, resolvedSticker == null ? stickerImageSourceOrUrl : null,
+        photoImageSourceOrUrl,
+        stickerImageSourceOrUrl,
         stickerPosX, stickerPosY,
         attachmentUrl,
         caption).catch(e => { reject(e) });
@@ -70,13 +66,10 @@ export default class SnapchatLogin {
 
 
   static async shareVideoAtUrl(videoUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption) {
-    const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
-
-    const resolvedSticker = resolveAssetSource(stickerImageSourceOrUrl);
 
     const { result } = await RNSnapchatKit.shareVideoAtUrl(
         videoUrl,
-        resolvedSticker, resolvedSticker == null ? stickerImageSourceOrUrl : null,
+        stickerImageSourceOrUrl,
         stickerPosX, stickerPosY,
         attachmentUrl,
         caption).catch(e => { reject(e) });

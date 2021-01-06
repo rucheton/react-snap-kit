@@ -1,18 +1,22 @@
 package com.mduthey.snapchat;
 
 import android.app.Activity;
+import android.net.Uri;
 import android.content.pm.PackageManager;
 
+import com.facebook.react.bridge.JSApplicationIllegalArgumentException;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.Dynamic;
+import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.snapchat.kit.sdk.SnapLogin;
 import com.snapchat.kit.sdk.core.controller.LoginStateController;
@@ -23,6 +27,8 @@ import com.snapchat.kit.sdk.login.models.UserDataResponse;
 import com.snapchat.kit.sdk.SnapCreative;
 import com.snapchat.kit.sdk.creative.api.SnapCreativeKitApi;
 import com.snapchat.kit.sdk.creative.exceptions.SnapMediaSizeException;
+import com.snapchat.kit.sdk.creative.exceptions.SnapVideoLengthException;
+import com.snapchat.kit.sdk.creative.exceptions.SnapStickerSizeException;
 import com.snapchat.kit.sdk.creative.media.SnapMediaFactory;
 import com.snapchat.kit.sdk.creative.media.SnapPhotoFile;
 import com.snapchat.kit.sdk.creative.media.SnapVideoFile;
@@ -31,6 +37,8 @@ import com.snapchat.kit.sdk.creative.models.SnapContent;
 import com.snapchat.kit.sdk.creative.models.SnapLiveCameraContent;
 import com.snapchat.kit.sdk.creative.models.SnapPhotoContent;
 import com.snapchat.kit.sdk.creative.models.SnapVideoContent;
+
+import java.io.File;
 
 public class SnapchatLoginModule extends ReactContextBaseJavaModule {
 
@@ -83,7 +91,7 @@ public class SnapchatLoginModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void logout(final Promise promise) {
         try {
-            SnapLogin.getAuthTokenManager(getReactApplicationContext()).revokeToken();
+            SnapLogin.getAuthTokenManager(getReactApplicationContext()).clearToken();
             promise.resolve("{\"result\": true}");
         } catch (Exception e) {
             promise.resolve("{\"result\": false, \"error\": "+ e.toString() +"}");
@@ -146,36 +154,33 @@ public class SnapchatLoginModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void sharePhotoResolved(
-                @Nullable Object resolvedPhoto,
                 @Nullable String photoUrl,
-                @Nullable Object stickerResolved,
                 @Nullable String stickerUrl,
-                @Nullable float stickerPosX,
-                @Nullable float stickerPosY,
+                @Nullable Float stickerPosX,
+                @Nullable Float stickerPosY,
                 @Nullable String attachmentUrl,
                 @Nullable String caption,
                 Promise promise
             ) {
 
-            Object photo = resolvedPhoto != null ? resolvedPhoto : photoUrl;
-            Object sticker = stickerResolved != null ? stickerResolved : stickerUrl;
+//             Dynamic photo = resolvedPhoto.isNull() ? resolvedPhoto.asString() : photoUrl;
+//             Dynamic sticker = stickerResolved.isNull() ? stickerResolved.asString() : stickerUrl;
 
-            shareWithPhoto(photo, null, sticker, stickerPosX, stickerPosY, attachmentUrl, caption, promise);
+            shareWithPhoto(photoUrl, null, stickerUrl, stickerPosX, stickerPosY, attachmentUrl, caption, promise);
     }
     @ReactMethod
     public void shareVideoAtUrl(
                 @Nullable String videoUrl,
-                @Nullable Object stickerResolved,
                 @Nullable String stickerUrl,
-                @Nullable float stickerPosX,
-                @Nullable float stickerPosY,
+                @Nullable Float stickerPosX,
+                @Nullable Float stickerPosY,
                 @Nullable String attachmentUrl,
                 @Nullable String caption,
                 Promise promise
             ) {
-            Object sticker = stickerResolved != null ? stickerResolved : stickerUrl;
+//             Dynamic sticker = stickerResolved.isNull() ? stickerResolved.asString() : stickerUrl;
 
-            shareWithPhoto(null, videoUrl, sticker, stickerPosX, stickerPosY, attachmentUrl, caption, promise);
+            shareWithPhoto(null, videoUrl, stickerUrl, stickerPosX, stickerPosY, attachmentUrl, caption, promise);
     }
 
     private void canOpenUrl(String packageScheme, Promise promise){
@@ -186,17 +191,17 @@ public class SnapchatLoginModule extends ReactContextBaseJavaModule {
         } catch (PackageManager.NameNotFoundException e) {
           promise.resolve(false);
         } catch (Exception e) {
-          promise.reject(new JSApplicationIllegalArgumentException(
+          promise.resolve(new JSApplicationIllegalArgumentException(
                   "Could not check if URL '" + packageScheme + "' can be opened: " + e.getMessage()));
         }
       }
 
     private void shareWithPhoto(
-          @Nullable Object photoImageOrUrl,
+          @Nullable String photoImageOrUrl,
           @Nullable String videoUrl,
-          @Nullable Object stickerImageOrUrl,
-          @Nullable float stickerPosX,
-          @Nullable float stickerPosY,
+          @Nullable String stickerImageOrUrl,
+          @Nullable Float stickerPosX,
+          @Nullable Float stickerPosY,
           @Nullable String attachmentUrl,
           @Nullable String caption,
           Promise promise
@@ -208,23 +213,32 @@ public class SnapchatLoginModule extends ReactContextBaseJavaModule {
           SnapCreativeKitApi snapCreativeKitApi = SnapCreative.getApi(activity);
 
 
-
           if (videoUrl != null) {
-              SnapVideoFile videoFile;
+              SnapVideoFile snVideoFile = null;
               try {
-                 videoFile = snapMediaFactory.getSnapVideoFromFile(new File(videoUrl));
+                final File videoFile = new File(videoUrl);
+                if (videoFile.exists()) {
+                    snVideoFile = snapMediaFactory.getSnapVideoFromFile(videoFile);
+                } else {
+                    promise.resolve("Error: Video file not found");
+                }
               } catch (SnapMediaSizeException|SnapVideoLengthException e) {
-                 promise.reject(e);
+                 promise.resolve(e.toString());
                  return;
               }
-              snapContent = new SnapVideoContent(videoFile)
+              snapContent = new SnapVideoContent(snVideoFile);
 
-          } else if (photoImageOrUrl instanceof String) {
-              SnapPhotoFile photoFile;
+          } else if (photoImageOrUrl != null) {
+              SnapPhotoFile photoFile = null;
               try {
-                 photoFile = snapMediaFactory.getSnapPhotoFromFile(new File(photoImageOrUrl));
+                 final File imageFile = new File(photoImageOrUrl);
+                 if (imageFile.exists()) {
+                    photoFile = snapMediaFactory.getSnapPhotoFromFile(imageFile);
+                 } else {
+                    promise.resolve("Error: Image file not found");
+                 }
               } catch (SnapMediaSizeException e) {
-                 promise.reject(e);
+                 promise.resolve(e.toString());
                  return;
               }
               snapContent = new SnapPhotoContent(photoFile);
@@ -235,27 +249,26 @@ public class SnapchatLoginModule extends ReactContextBaseJavaModule {
           if (stickerImageOrUrl != null) {
               SnapSticker snapSticker = null;
 
-              String stickerUrl = null;
-              if (stickerImageOrUrl instanceof ReadableMap) {
-                stickerUrl = stickerImageOrUrl.hasKey("uri") ? stickerOptions.getString("uri") : null;
-              } else if (stickerImageOrUrl instanceof String) {
-                stickerUrl = stickerImageOrUrl;
-              }
+
               try {
-                  snapSticker = snapMediaFactory.getSnapStickerFromFile(new File(stickerUrl));
-                  if (stickerPosX != null) {
-                    snapSticker.setPosX(stickerPosX);
-                  }
-                  if (stickerPosY != null) {
-                    snapSticker.setPosY(stickerPosY);
-                  }
+                    final File stickerFile = new File(stickerImageOrUrl);
+                    if (stickerFile.exists()) {
+                        snapSticker = snapMediaFactory.getSnapStickerFromFile(stickerFile);
+                    } else {
+                        promise.resolve("Error: Sticker file not found");
+                    }
+//                   if (stickerPosX != null) {
+//                     snapSticker.setPosX(stickerPosX);
+//                   }
+//                   if (stickerPosY != null) {
+//                     snapSticker.setPosY(stickerPosY);
+//                   }
 
                   snapContent.setSnapSticker(snapSticker);
               } catch (SnapStickerSizeException e) {
-                  promise.reject(e);
+                  promise.resolve(e.toString());
                   return;
               }
-
           }
 
           if (caption != null) {
@@ -268,15 +281,13 @@ public class SnapchatLoginModule extends ReactContextBaseJavaModule {
           snapCreativeKitApi.send(snapContent);
 
           promise.resolve("success");
-        } catch (SnapMediaSizeException e) {
-          promise.reject("Snapchat Exception", e.getMessage());
         } catch (Exception e){
-          promise.reject("An unknown error occured", e);
+          promise.resolve("UNERROR: "+e.toString());
         }
       }
 
     @ReactMethod
-    public void isSnapchatAvailable(final Promise promise){
+    public void isSnapchatAvailable(final Promise promise) {
       canOpenUrl(snapchatScheme, promise);
     }
 

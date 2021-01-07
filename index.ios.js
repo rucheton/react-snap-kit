@@ -7,16 +7,16 @@ export default class SnapchatKit {
   static login() {
     return new Promise((resolve, reject) => {
       RNSnapchatKit.login()
-        .then((result) => {
-          if(result.error) {
-            reject(result.error);
-          } else {
-            this.getUserInfo()
-              .then(resolve)
-              .catch(reject);
-          }
-        })
-        .catch(e => reject(e));
+          .then((result) => {
+            if(result.error) {
+              reject(result.error);
+            } else {
+              this.getUserInfo()
+                  .then(resolve)
+                  .catch(reject);
+            }
+          })
+          .catch(e => reject(e));
     });
   }
 
@@ -33,28 +33,28 @@ export default class SnapchatKit {
   static getUserInfo() {
     return new Promise((resolve, reject) => {
       RNSnapchatKit.fetchUserData()
-        .then(async (tmp) => {
-          const data = tmp;
-          if (data === null) {
-            resolve(null);
-          } else {
-            const res = await RNSnapchatKit.getAccessToken();
-            data.accessToken = res.accessToken;
-            resolve(data);
-          }
-        })
-        .catch(e => { reject(e) });
+          .then(async (tmp) => {
+            const data = tmp;
+            if (data === null) {
+              resolve(null);
+            } else {
+              const res = await RNSnapchatKit.getAccessToken();
+              data.accessToken = res.accessToken;
+              resolve(data);
+            }
+          })
+          .catch(e => { reject(e) });
     });
   }
 
   static async sharePhoto(photoImageSourceOrUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption) {
 
-	const { result } = await RNSnapchatKit.sharePhotoResolved(
+    const { result } = await RNSnapchatKit.sharePhotoResolved(
         photoImageSourceOrUrl,
         stickerImageSourceOrUrl,
-		stickerPosX, stickerPosY,
-		attachmentUrl,
-		caption).catch(e => { reject(e) });
+        stickerPosX, stickerPosY,
+        attachmentUrl,
+        caption).catch(e => { reject(e) });
 
     return result;
   }
@@ -62,12 +62,12 @@ export default class SnapchatKit {
 
   static async shareVideoAtUrl(videoUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption) {
 
-	const { result } = await RNSnapchatKit.shareVideoAtUrl(
-		videoUrl,
+    const { result } = await RNSnapchatKit.shareVideoAtUrl(
+        videoUrl,
         stickerImageSourceOrUrl,
-		stickerPosX, stickerPosY,
-		attachmentUrl,
-		caption).catch(e => { reject(e) });
+        stickerPosX, stickerPosY,
+        attachmentUrl,
+        caption).catch(e => { reject(e) });
 
     return result;
   }

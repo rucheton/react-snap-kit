@@ -117,18 +117,18 @@ RCT_REMAP_METHOD(getAccessToken,
 #pragma mark --------- Creative Kit ------------
 //******************************************************************
 
-RCT_EXPORT_METHOD(sharePhotoResolved:(NSString *)photoUrl stickerUrl:(NSString *)stickerUrl
+RCT_EXPORT_METHOD(sharePhotoResolved:(NSURL *)photoUrl stickerUrl:(NSURL *)stickerUrl
                   stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY
                   attachmentUrl:(NSString *)attachmentUrl
                   caption:(NSString *)caption
                   resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
 
-    [self shareWithPhoto:photoUrl videoUrl:NULL sticker:sticker stickerPosX:stickerPosX stickerPosY:stickerPosY attachmentUrl:attachmentUrl caption:caption resolver:resolve rejecter:reject];
+    [self shareWithPhoto:photoUrl videoUrl:NULL sticker:stickerUrl stickerPosX:stickerPosX stickerPosY:stickerPosY attachmentUrl:attachmentUrl caption:caption resolver:resolve rejecter:reject];
 
 }
 
 
-RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl stickerUrl:(NSString *)stickerUrl
+RCT_EXPORT_METHOD(shareVideoAtUrl:(NSURL *)videoUrl stickerUrl:(NSURL *)stickerUrl
                   stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY
                   attachmentUrl:(NSString *)attachmentUrl
                   caption:(NSString *)caption
@@ -138,26 +138,25 @@ RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl stickerUrl:(NSString *)st
 
 }
 
-- (void) shareWithPhoto:(NSString *)photoImageOrUrl videoUrl:(NSString *)videoUrl sticker:(NSString *)stickerImageOrUrl stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY attachmentUrl:(NSString *)attachmentUrl caption:(NSString *)caption resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject {
+- (void) shareWithPhoto:(NSURL *)photoImageOrUrl videoUrl:(NSURL *)videoUrl sticker:(NSURL *)stickerImageOrUrl stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY attachmentUrl:(NSString *)attachmentUrl caption:(NSString *)caption resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject {
 
     NSObject<SCSDKSnapContent> *snap;
 
     if (videoUrl) {
-        NSURL *url = [self urlForString:videoUrl];
-        SCSDKSnapVideo *video = [[SCSDKSnapVideo alloc] initWithVideoUrl:url];
+        SCSDKSnapVideo *video = [[SCSDKSnapVideo alloc] initWithVideoUrl:videoUrl];
         snap = [[SCSDKVideoSnapContent alloc] initWithSnapVideo:video];
-    } else if ([photoImageOrUrl length] == 0) {
-        NSURL *url = [self urlForString:(NSString *)photoImageOrUrl];
-        SCSDKSnapPhoto *photo = [[SCSDKSnapPhoto alloc] initWithImageUrl:url];
+    } else if (photoImageOrUrl) {
+        SCSDKSnapPhoto *photo = [[SCSDKSnapPhoto alloc] initWithImageUrl:photoImageOrUrl];
         snap = [[SCSDKPhotoSnapContent alloc] initWithSnapPhoto:photo];
     } else {
         snap = [SCSDKNoSnapContent new];
     }
 
-    if ([stickerImageOrUrl length] == 0) {
+    NSLog(@"snap api : %@", snap);
+
+    if (stickerImageOrUrl) {
          SCSDKSnapSticker *snapSticker;
-         NSURL *url = [self urlForString:(NSString *)stickerImageOrUrl];
-         snapSticker = [[SCSDKSnapSticker alloc] initWithStickerUrl:url isAnimated:NO];
+         snapSticker = [[SCSDKSnapSticker alloc] initWithStickerUrl:stickerImageOrUrl isAnimated:NO];
 
          if (stickerPosX) {
              snapSticker.posX = stickerPosX;
@@ -169,10 +168,15 @@ RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl stickerUrl:(NSString *)st
          snap.sticker = snapSticker;
      }
 
-     snap.caption = caption;
-     snap.attachmentUrl = attachmentUrl;
+    if (caption) {
+        snap.caption = caption;
+    }
+    if (attachmentUrl) {
+        snap.attachmentUrl = attachmentUrl;
+    }
      NSLog(@"snap api : %@", snapAPI);
      [snapAPI startSendingContent:snap completionHandler:^(NSError *error) {
+        NSLog(@"CALLED HERE: %@", error);
          if (error != nil) {
              resolve(@{
              @"result": @(YES),

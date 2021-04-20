@@ -171,8 +171,9 @@ RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl
              NSURL *url = [self urlForString:(NSString *)stickerImageOrUrl];
              snapSticker = [[SCSDKSnapSticker alloc] initWithStickerUrl:url isAnimated:NO];
          }
-         else if ([stickerImageOrUrl isKindOfClass:[UIImage class]]) {
-             snapSticker = [[SCSDKSnapSticker alloc] initWithStickerImage:(UIImage *)stickerImageOrUrl];
+         else if ([stickerImageOrUrl isKindOfClass:[NSDictionary class]]) {
+             UIImage *image = [RCTConvert UIImage:stickerImageOrUrl];
+             snapSticker = [[SCSDKSnapSticker alloc] initWithStickerImage:image];
          }
 
          if (stickerPosX) {
@@ -189,10 +190,7 @@ RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl
      snap.attachmentUrl = attachmentUrl;
      [snapAPI startSendingContent:snap completionHandler:^(NSError *error) {
          if (error != nil) {
-             resolve(@{
-             @"result": @(NO),
-             @"error": error.localizedDescription
-                 });
+             reject([NSString stringWithFormat:@"%ld", (long)error.code], error.localizedDescription, error);
          }
          else {
              resolve(@{ @"result": @(YES)});

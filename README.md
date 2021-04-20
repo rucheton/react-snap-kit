@@ -6,47 +6,53 @@
 - [4. Usage](#usage)
 
 <a id="changelog"></a>
+
 ## 1. Change Log
 
-* **v1.0.0** :
-    - Brand new React Native Snaps  
+- **v1.0.0** :
+  - Brand new React Native Snaps
 
 <a id="installation"></a>
+
 ## 2. SDK Instalation
 
-From your project folder: 
+From your project folder:
 
 #### yarn
 
 ```bash
-$ yarn add git+https://github.com/QuentinbTahi/react-snap-kit.git -- save
+$ yarn add git+https://github.com/rucheton/react-snap-kit.git
 ```
 
 #### npm
 
 ```bash
-$ npm install git+https://github.com/QuentinbTahi/react-snap-kit.git -- save
+$ npm install git+https://github.com/rucheton/react-snap-kit.git -- save
 ```
 
 <a id="projectConfiguration"></a>
+
 ## 3. Project configuration
 
 ### 3.2 iOS configuration
 
-#### 3.2.1 Change min iOS version : 
+#### 3.2.1 Change min iOS version :
 
 Edit your `Podfile` min version to 10 : `platform :ios, '10.0'`
 
-#### 3.2.2 Run `$ pod install` from iOS folder : 
+#### 3.2.2 Run `$ pod install` from iOS folder :
 
 ```bash
 $ cd ios && pod install
 ```
+
 or
+
 ```bash
 $ react-native link react-native-snapchat-kit`
 ```
-#### 3.2.3 Edit info.plist file : 
+
+#### 3.2.3 Edit info.plist file :
 
 Add to `Info.plist`
 
@@ -73,7 +79,6 @@ Add to `Info.plist`
 
 **REMEMBER** Add the app url to your URL Types on Xcode config.
 
-
 #### 3.2.4 Update the `AppDelegate.m` (Login only) :
 
 ```objc
@@ -85,7 +90,7 @@ Add to `Info.plist`
   if ([SCSDKLoginClient application:application openURL:url options:options]) {
     return YES;
   }
-  
+
   return NO;
 }
 ```
@@ -95,10 +100,13 @@ Add to `Info.plist`
 #### 3.3.1 Update build.gradle :
 
 Update `android/build.gradle` with the min SDK Version :
+
 ```json
-minSdkVersion = 19
+(minSdkVersion = 19)
 ```
+
 and add to your repositories list :
+
 ```
 maven {
     url "https://storage.googleapis.com/snap-kit-build/maven"
@@ -108,11 +116,13 @@ maven {
 #### 3.3.2 Update `AndroidManifest.xml` :
 
 Add the INTERNET permission
+
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
 Add this to your application
+
 ```xml
 <meta-data android:name="com.snapchat.kit.sdk.clientId" android:value="YOUR CLIENT ID" />
 <meta-data android:name="com.snapchat.kit.sdk.redirectUrl" android:value="YOUR REDIRECT URL" />
@@ -140,6 +150,7 @@ Add this to your application
 ```
 
 #### 3.3.3 Create a new file `values/arrays.xml` :
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
@@ -153,7 +164,7 @@ Add this to your application
 #### 3.3.4 Set up your FileProvider to share media files to Snapchat (creative kit only):
 
 To share any media or sticker content to Snapchat, follow the protocol specified by [FileProvider API](https://developer.android.com/reference/android/support/v4/content/FileProvider). Once you have set this up, your AndroidManifest.xml will contain the following under `<application>`:
-    
+
 ```xml
 <provider
     android:authorities="${applicationId}.fileprovider"
@@ -166,44 +177,58 @@ To share any media or sticker content to Snapchat, follow the protocol specified
         />
 </provider>
 ```
-        
+
 **Note**: The authority used by the SDK is explicitly `<your-package-name>.fileprovider`. Please ensure you follow this convention when setting the value. If you have different package names for debug and production builds, the `${applicationId}` should resolve to it appropriately.
 
 <a id="usage"></a>
+
 ## 4. Usage
 
 ### 4.1 Login
 
 ```javascript
-import SnapchatKit from 'react-native-snapchat-kit';
+import SnapchatKit from "react-native-snapchat-kit";
 
-SnapchatKit.login() 
-SnapchatKit.isLogged()
-SnapchatKit.logout()
-SnapchatKit.getUserInfo()
+SnapchatKit.login();
+SnapchatKit.isLogged();
+SnapchatKit.logout();
+SnapchatKit.getUserInfo();
 ```
 
 ### 4.1 Creative
 
 ```javascript
-import SnapchatKit from 'react-native-snapchat-kit';
+import SnapchatKit from "react-native-snapchat-kit";
 
-SnapchatKit.sharePhoto(photoImageSourceOrUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption);
-SnapchatKit.shareVideoAtUrl(videoUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption);
+SnapchatKit.sharePhoto(
+  photoImageSourceOrUrl,
+  stickerImageSourceOrUrl,
+  stickerPosX,
+  stickerPosY,
+  attachmentUrl,
+  caption
+);
+SnapchatKit.shareVideoAtUrl(
+  videoUrl,
+  stickerImageSourceOrUrl,
+  stickerPosX,
+  stickerPosY,
+  attachmentUrl,
+  caption
+);
 ```
 
 #### 4.1.1 Notes on creative kit :
 
 - Media Size and Length Restrictions
-  * Shared media must be 100 MB or smaller.
-  * Videos must be 60 seconds or shorter.
+
+  - Shared media must be 100 MB or smaller.
+  - Videos must be 60 seconds or shorter.
 
 - Suggested Media Parameters:
-  * Aspect ratio - 9:16
-  * Preferred file types:
-  * Image - .jpg or .png
-  * Video - .mp4
-  * Dimensions - 1080px x 1920px
-  * Video Bitrate - 1080p at 8mbps or 720p at 5mbps
-
-
+  - Aspect ratio - 9:16
+  - Preferred file types:
+  - Image - .jpg or .png
+  - Video - .mp4
+  - Dimensions - 1080px x 1920px
+  - Video Bitrate - 1080p at 8mbps or 720p at 5mbps

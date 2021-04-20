@@ -1,5 +1,5 @@
 {
-  "name": "react-native-snapchat-kit",
+  "name": "react-native-snapkit",
   "title": "React Native Snapchat Kit",
   "version": "1.0.0",
   "description": "Bridge to use Snapchat Frameworks in react native",
@@ -9,8 +9,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/QuentinbTahi/react-snap-kit",
-    "baseUrl": "https://github.com/QuentinbTahi/react-snap-kit"
+    "url": "git+https://github.com/rucheton/react-snap-kit",
+    "baseUrl": "https://github.com/rucheton/react-snap-kit"
   },
   "keywords": [
     "react-native"

@@ -144,12 +144,11 @@ RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl
 }
 
 - (void) shareWithPhoto:(NSObject *)photoImageOrUrl videoUrl:(NSString *)videoUrl sticker:(NSObject *)stickerImageOrUrl stickerPosX:(float)stickerPosX stickerPosY:(float)stickerPosY attachmentUrl:(NSString *)attachmentUrl caption:(NSString *)caption resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject {
-
+    
     NSObject<SCSDKSnapContent> *snap;
 
     if (videoUrl) {
-        NSURL *url = [self urlForString:videoUrl];
-        SCSDKSnapVideo *video = [[SCSDKSnapVideo alloc] initWithVideoUrl:url];
+        SCSDKSnapVideo *video = [[SCSDKSnapVideo alloc] initWithVideoUrl:[NSURL URLWithString:videoUrl]];
         snap = [[SCSDKVideoSnapContent alloc] initWithSnapVideo:video];
     }
     else if ([photoImageOrUrl isKindOfClass:[NSString class]]) {
@@ -188,11 +187,10 @@ RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl
 
      snap.caption = caption;
      snap.attachmentUrl = attachmentUrl;
-     NSLog(@"snap api : %@", snapAPI);
      [snapAPI startSendingContent:snap completionHandler:^(NSError *error) {
          if (error != nil) {
              resolve(@{
-             @"result": @(YES),
+             @"result": @(NO),
              @"error": error.localizedDescription
                  });
          }

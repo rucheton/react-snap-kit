@@ -10,10 +10,10 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
 import com.facebook.react.bridge.JavaScriptModule;
 
-public class SnapchatLoginPackage implements ReactPackage {
+public class SnapchatKitPackage implements ReactPackage {
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
-        return Arrays.<NativeModule>asList(new SnapchatLoginModule(reactContext));
+        return Arrays.<NativeModule>asList(new SnapchatKitModule(reactContext));
     }
 
     @Override

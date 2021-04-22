@@ -52,6 +52,8 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 
 class IncorrectFileNameException extends Exception {
@@ -186,7 +188,15 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
         this.shareWithPhoto(null, null, videoUrl, stickerResolved, stickerUrl, stickerPosX, stickerPosY, attachmentUrl, caption, promise);
     }
 
-    private File getFileFromUri(String uri) throws IncorrectFileNameException,IOException {
+    private String md5Base64(String input) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        md.update(input.getBytes());
+        byte[] digest = md.digest();
+
+        return  Base64.encodeToString(digest, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE);
+    }
+
+    private File getFileFromUri(String uri) throws IncorrectFileNameException,IOException, NoSuchAlgorithmException {
         if (TextUtils.isEmpty(uri)) {
             throw new IncorrectFileNameException("Incorrect URI:" + uri);
         }
@@ -195,7 +205,7 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
         }
         if (uri.startsWith("http")) {
             final URL url = new URL(uri);
-            File file = new File(this.reactContext.getCacheDir(), Base64.encodeToString(url.toString().getBytes(), Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE));
+            File file = new File(this.reactContext.getCacheDir(), md5Base64(url.toString()));
             InputStream inputStream = url.openStream();
             try (FileOutputStream outputStream = new FileOutputStream(file, false)) {
                 int read;

@@ -65,6 +65,9 @@ export default class SnapchatKit {
         reject(e)
       });
     const resultJSON = JSON.parse(result);
+    if (!!resultJSON.error) {
+      throw resultJSON.error
+    }
     return !!resultJSON.result;
   }
 
@@ -79,6 +82,9 @@ export default class SnapchatKit {
       attachmentUrl,
       caption).catch(e => { reject(e) });
       const resultJSON = JSON.parse(result);
+      if (!!resultJSON.error) {
+        throw resultJSON.error
+      }
       return !!resultJSON.result;
   }
 }

@@ -204,7 +204,7 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
         if (uri.startsWith("file://")) {
             return new File(uri.substring(7));
         }
-        if (uri.startsWith("http")) {
+        if (uri.startsWith("http://") || uri.startsWith("https://")) {
             final URL url = new URL(uri);
             File file = new File(this.reactContext.getCacheDir(), md5Base64(url.toString()));
             InputStream inputStream = url.openStream();
@@ -223,7 +223,7 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
         if (uri.indexOf("://") == -1 && uri.indexOf("/") == -1) {
             String[] deftypes = {"drawable", "raw"};
             for (String defType: deftypes) {
-                int resourceId = this.reactContext.getResources().getIdentifier(uri, "drawable", this.reactContext.getPackageName());
+                int resourceId = this.reactContext.getResources().getIdentifier(uri, defType, this.reactContext.getPackageName());
                 if (resourceId == 0) {
                     continue;
                 }

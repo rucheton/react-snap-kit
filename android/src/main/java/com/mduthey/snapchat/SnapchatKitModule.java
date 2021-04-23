@@ -20,6 +20,7 @@ import android.os.FileUtils;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.util.TypedValue;
 
 import com.snapchat.kit.sdk.SnapCreative;
 import com.snapchat.kit.sdk.SnapLogin;
@@ -218,6 +219,29 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
                 inputStream.close();
             }
             return file;
+        }
+        if (uri.indexOf("://") == -1 && uri.indexOf("/") == -1) {
+            String[] deftypes = {"drawable", "raw"};
+            for (String defType: deftypes) {
+                int resourceId = this.reactContext.getResources().getIdentifier(uri, "drawable", this.reactContext.getPackageName());
+                if (resourceId == 0) {
+                    continue;
+                }
+                TypedValue value = new TypedValue();
+                File file = new File(this.reactContext.getCacheDir(), md5Base64(uri));
+                InputStream inputStream = this.reactContext.getResources().openRawResource(resourceId);
+                try (FileOutputStream outputStream = new FileOutputStream(file, false)) {
+                    int read;
+                    byte[] bytes = new byte[8192];
+                    while ((read = inputStream.read(bytes)) != -1) {
+                        outputStream.write(bytes, 0, read);
+                    }
+                    outputStream.flush();
+                } finally {
+                    inputStream.close();
+                }
+                return file;
+            }
         }
         throw new IncorrectFileNameException("Incorrect URI:" + uri);
     }

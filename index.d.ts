@@ -1,4 +1,6 @@
-declare module 'react-native-snapchat-kit' {
+import { ImageResolvedAssetSource } from "react-native";
+
+declare module "react-native-snapchat-kit" {
   interface SnapchatUserData {
     displayName: string;
     externalId: string;
@@ -7,12 +9,33 @@ declare module 'react-native-snapchat-kit' {
     error?: any;
   }
 
+  interface AssetOrURL {
+    url?: string;
+    asset?: ImageResolvedAssetSource;
+  }
+
+  interface Sticker {
+    image: AssetOrURL;
+    x?: number;
+    y?: number;
+  }
+
   export default class SnapchatKit {
     static login(): Promise<SnapchatUserData | null>;
     static getUserInfo(): Promise<SnapchatUserData | null>;
     static isLogged(): Promise<boolean>;
     static logout(): Promise<boolean>;
-    static sharePhotoAtUrl(photoUrl: string, stickerUrl: string, stickerPosX: DoubleRange, stickerPosY: DoubleRange, attachmentUrl: string, caption: string): Promise<boolean>;
-    static shareVideoAtUrl(videoUrl: string, stickerUrl: string, stickerPosX: DoubleRange, stickerPosY: DoubleRange, attachmentUrl: string, caption: string): Promise<boolean>;
+    static sharePhoto(params: {
+      photo?: AssetOrURL;
+      sticker?: Sticker;
+      attachment?: string;
+      caption?: string;
+    }): Promise<boolean>;
+    static shareVideo(params: {
+      url: string;
+      sticker?: Sticker;
+      attachment?: string;
+      caption?: string;
+    }): Promise<boolean>;
   }
 }

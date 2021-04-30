@@ -1,4 +1,4 @@
-import { NativeModules, NativeEventEmitter } from 'react-native';
+import { NativeModules, NativeEventEmitter } from "react-native";
 
 export const RNSnapchatKit = NativeModules.SnapchatKit;
 export const RNSnapchatKitEmitter = new NativeEventEmitter(RNSnapchatKit);
@@ -8,15 +8,13 @@ export default class SnapchatKit {
     return new Promise((resolve, reject) => {
       RNSnapchatKit.login()
         .then((result) => {
-          if(result.error) {
+          if (result.error) {
             reject(result.error);
-          } else { 
-            this.getUserInfo()
-              .then(resolve)
-              .catch(reject);
+          } else {
+            this.getUserInfo().then(resolve).catch(reject);
           }
         })
-        .catch(e => reject(e)); 
+        .catch((e) => reject(e));
     });
   }
 
@@ -43,40 +41,42 @@ export default class SnapchatKit {
             resolve(data);
           }
         })
-        .catch(e => { reject(e) });
+        .catch((e) => {
+          reject(e);
+        });
     });
   }
 
-  static async sharePhoto(photoImageSourceOrUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption) {
-	const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
-
-	const resolvedPhoto = resolveAssetSource(photoImageSourceOrUrl);
-	const resolvedSticker = resolveAssetSource(stickerImageSourceOrUrl);
-
-	const { result } = await RNSnapchatKit.sharePhotoResolved(
-		resolvedPhoto, resolvedPhoto == null ? photoImageSourceOrUrl : null, 
-		resolvedSticker, resolvedSticker == null ? stickerImageSourceOrUrl : null, 
-		stickerPosX, stickerPosY, 
-		attachmentUrl, 
-		caption).catch(e => { reject(e) });
-
-    return result;
-  }
-
-
-  static async shareVideoAtUrl(videoUrl, stickerImageSourceOrUrl, stickerPosX, stickerPosY, attachmentUrl, caption) {
-    const resolveAssetSource = require('react-native/Libraries/Image/resolveAssetSource');
-
-	const resolvedSticker = resolveAssetSource(stickerImageSourceOrUrl);
-
-	const { result } = await RNSnapchatKit.shareVideoAtUrl(
-		videoUrl, 
-		resolvedSticker, resolvedSticker == null ? stickerImageSourceOrUrl : null, 
-		stickerPosX, stickerPosY, 
-		attachmentUrl, 
-		caption).catch(e => { reject(e) });
+  static async sharePhoto({ photo, sticker, attachment, caption }) {
+    const { result } = await RNSnapchatKit.sharePhotoResolved(
+      photo.asset,
+      photo.url,
+      sticker.image.asset,
+      sticker.image.url,
+      sticker.x || 0.5,
+      sticker.y || 0.5,
+      attachment,
+      caption
+    ).catch((e) => {
+      reject(e);
+    });
 
     return result;
   }
 
+  static async shareVideo({ url, sticker, attachment, caption }) {
+    const { result } = await RNSnapchatKit.shareVideoAtUrl(
+      url,
+      sticker.image.asset,
+      sticker.image.url,
+      sticker.x || 0.5,
+      sticker.y || 0.5,
+      attachment,
+      caption
+    ).catch((e) => {
+      reject(e);
+    });
+
+    return result;
+  }
 }

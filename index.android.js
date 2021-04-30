@@ -53,12 +53,12 @@ export default class SnapchatKit {
 
   static async sharePhoto({ photo, sticker, attachment, caption }) {
     const result = await RNSnapchatKit.sharePhotoResolved(
-      photo.asset,
-      photo.url,
-      sticker.image.asset,
-      sticker.image.url,
-      sticker.x || 0.5,
-      sticker.y || 0.5,
+      photo && photo.asset,
+      photo && photo.url,
+      sticker && sticker.image.asset,
+      sticker && sticker.image.url,
+      (sticker && sticker.x) || 0.5,
+      (sticker && sticker.y) || 0.5,
       attachment,
       caption
     ).catch((e) => {
@@ -71,13 +71,13 @@ export default class SnapchatKit {
     return !!resultJSON.result;
   }
 
-  static async shareVideoAtUrl({ url, sticker, attachment, caption }) {
+  static async shareVideo({ url, sticker, attachment, caption }) {
     const result = await RNSnapchatKit.shareVideoAtUrl(
       url,
-      sticker.image.asset,
-      sticker.image.url,
-      sticker.x || 0.5,
-      sticker.y || 0.5,
+      sticker && sticker.image.asset,
+      sticker && sticker.image.url,
+      (sticker && sticker.x) || 0.5,
+      (sticker && sticker.y) || 0.5,
       attachment,
       caption
     ).catch((e) => {

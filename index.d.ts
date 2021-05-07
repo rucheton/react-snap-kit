@@ -21,8 +21,9 @@ declare module "react-native-snapchat-kit" {
   }
 
   export default class SnapchatKit {
-    static login(): Promise<SnapchatUserData | null>;
-    static getUserInfo(): Promise<SnapchatUserData | null>;
+    static login(): Promise<void>;
+    static getAccessToken(): Promise<string>;
+    static getUserInfo(): Promise<SnapchatUserData>;
     static isLogged(): Promise<boolean>;
     static logout(): Promise<boolean>;
     static sharePhoto(params: {
@@ -30,12 +31,12 @@ declare module "react-native-snapchat-kit" {
       sticker?: Sticker;
       attachment?: string;
       caption?: string;
-    }): Promise<boolean>;
+    }): Promise<void>;
     static shareVideo(params: {
       url: string;
       sticker?: Sticker;
       attachment?: string;
       caption?: string;
-    }): Promise<boolean>;
+    }): Promise<void>;
   }
 }

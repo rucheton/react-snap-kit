@@ -1,6 +1,7 @@
 package com.mduthey.snapchat;
 
 import com.facebook.imagepipeline.core.FileCacheFactory;
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -64,7 +65,6 @@ class IncorrectFileNameException extends Exception {
 }
 
 public class SnapchatKitModule extends ReactContextBaseJavaModule {
-
     private final ReactApplicationContext reactContext;
     private final LoginStateController.OnLoginStateChangedListener mLoginStateChangedListener =
             new LoginStateController.OnLoginStateChangedListener() {
@@ -105,30 +105,20 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void login(final Promise promise) {
-        try {
-            SnapLogin.getLoginStateController(getReactApplicationContext()).addOnLoginStateChangedListener(this.mLoginStateChangedListener);
-            SnapLogin.getAuthTokenManager(getReactApplicationContext()).startTokenGrant();
-            promise.resolve("{\"result\": true}");
-        } catch (Exception e) {
-            promise.resolve("{\"result\": false, \"error\": "+ e.toString() +"}");
-        }
+    public void login() {
+        SnapLogin.getLoginStateController(getReactApplicationContext()).addOnLoginStateChangedListener(this.mLoginStateChangedListener);
+        SnapLogin.getAuthTokenManager(getReactApplicationContext()).startTokenGrant();
     }
 
     @ReactMethod
-    public void logout(final Promise promise) {
-        try {
-            SnapLogin.getAuthTokenManager(getReactApplicationContext()).clearToken();
-            promise.resolve("{\"result\": true}");
-        } catch (Exception e) {
-            promise.resolve("{\"result\": false, \"error\": "+ e.toString() +"}");
-        }
+    public void logout() {
+        SnapLogin.getAuthTokenManager(getReactApplicationContext()).clearToken();
     }
 
     @ReactMethod
     public void isUserLoggedIn(Promise promise) {
         boolean isTrue = SnapLogin.isUserLoggedIn(getReactApplicationContext());
-        promise.resolve("{\"result\": " + isTrue + "}");
+        promise.resolve(isTrue);
     }
 
     @ReactMethod
@@ -139,22 +129,24 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
                 @Override
                 public void onSuccess(@Nullable UserDataResponse userDataResponse) {
                     if (userDataResponse == null || userDataResponse.getData() == null) {
-                        promise.resolve(null);
+                        promise.reject("no data");
                         return;
                     }
 
                     MeData meData = userDataResponse.getData().getMe();
                     if (meData == null) {
-                        promise.resolve(null);
+                        promise.reject("no data");
                         return;
                     }
-                    String output = "{"
-                            + "\"displayName\": \"" + meData.getDisplayName() + "\""
-                            + ", \"externalId\": \"" + meData.getExternalId() + "\""
-                            + ", \"avatar\": \"" + meData.getBitmojiData().getAvatar() + "\""
-                            + ", \"accessToken\": \""+ SnapLogin.getAuthTokenManager(getReactApplicationContext()).getAccessToken() + "\""
-                            + "}";
-                    promise.resolve(output);
+
+                    WritableMap map = Arguments.createMap();
+
+                    map.putString("displayName", meData.getDisplayName());
+                    map.putString("externalId", meData.getExternalId());
+                    map.putString("avatar", meData.getBitmojiData().getAvatar());
+                    map.putString("accessToken", SnapLogin.getAuthTokenManager(getReactApplicationContext()).getAccessToken());
+
+                    promise.resolve(map);
                 }
 
                 @Override
@@ -165,7 +157,7 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
                 }
             });
         } else {
-            promise.resolve(null);
+            promise.reject("unauthenticated");
         }
     }
 
@@ -173,9 +165,9 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
     public void getAccessToken(final Promise promise) {
         try {
             String accessToken = SnapLogin.getAuthTokenManager(getReactApplicationContext()).getAccessToken();
-            promise.resolve("{\"accessToken\": \"" + accessToken + "\"}");
+            promise.resolve(accessToken);
         } catch (Exception e) {
-            promise.resolve("{\"accessToken\": \"null\", \"error\": \"" + e.toString() + "\"}");
+            promise.reject("unauthenticated");
         }
     }
 
@@ -247,7 +239,6 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
     }
 
     private void shareWithPhoto(ReadableMap photoResolved, String photoUrl, String videoUrl, ReadableMap stickerResolved, String stickerUrl, Float stickerPosX, Float stickerPosY, String attachmentUrl, String caption, final Promise promise) {
-        JSONObject obj = new JSONObject();
         try {
             try {
                 final SnapContent content;
@@ -287,37 +278,24 @@ public class SnapchatKitModule extends ReactContextBaseJavaModule {
                     snapSticker.setPosY(stickerPosY);
                     content.setSnapSticker(snapSticker);
                 }
-                final String[] errorStr = new String[1];
                 snapCreativeKitApi.sendWithCompletionHandler(content, new SnapCreativeKitCompletionCallback() {
                     @Override
                     public void onSendSuccess() {
-                        errorStr[0] = null;
+                        promise.resolve(true);
                     }
 
                     @Override
                     public void onSendFailed(SnapCreativeKitSendError snapCreativeKitSendError) {
-                        errorStr[0] = snapCreativeKitSendError.toString() + " " + snapCreativeKitSendError.name();
+                        promise.reject(snapCreativeKitSendError.toString() + " " + snapCreativeKitSendError.name());
                     }
                 });
-                if (!TextUtils.isEmpty(errorStr[0])) {
-                    obj.put("result", true);
-                } else {
-                    obj.put("result", false);
-                    obj.put("error", errorStr[0]);
-
-                }
             } catch (SnapMediaSizeException | SnapVideoLengthException e) {
-                obj.put("result", false);
-                obj.put("error", e.getLocalizedMessage());
-                //Toast.makeText(view.getContext(), "Media too large to share", Toast.LENGTH_SHORT).show();
+                promise.reject(e.getLocalizedMessage());
             } catch (Exception e) {
-                obj.put("result", false);
-                obj.put("error", e.getLocalizedMessage());
+                promise.reject(e.getLocalizedMessage());
             }
-        } catch (JSONException e) {
-            promise.resolve("{\"result\": false, \"error\": \"Unknown JSONexception\"}");
-            return;
+        } catch (Exception e) {
+            promise.reject("Unknown JSONexception");
         }
-        promise.resolve(obj.toString());
     }
 }

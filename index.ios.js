@@ -5,50 +5,27 @@ export const RNSnapchatKitEmitter = new NativeEventEmitter(RNSnapchatKit);
 
 export default class SnapchatKit {
   static login() {
-    return new Promise((resolve, reject) => {
-      RNSnapchatKit.login()
-        .then((result) => {
-          if (result.error) {
-            reject(result.error);
-          } else {
-            this.getUserInfo().then(resolve).catch(reject);
-          }
-        })
-        .catch((e) => reject(e));
-    });
+    return RNSnapchatKit.login();
   }
 
-  static async isLogged() {
-    const { result } = await RNSnapchatKit.isUserLoggedIn();
-    return result;
+  static isLogged() {
+    return RNSnapchatKit.isUserLoggedIn();
   }
 
   static async logout() {
-    const { result } = await RNSnapchatKit.logout();
-    return result;
+    return RNSnapchatKit.logout();
   }
 
   static getUserInfo() {
-    return new Promise((resolve, reject) => {
-      RNSnapchatKit.fetchUserData()
-        .then(async (tmp) => {
-          const data = tmp;
-          if (data === null) {
-            resolve(null);
-          } else {
-            const res = await RNSnapchatKit.getAccessToken();
-            data.accessToken = res.accessToken;
-            resolve(data);
-          }
-        })
-        .catch((e) => {
-          reject(e);
-        });
-    });
+    return RNSnapchatKit.fetchUserData();
   }
 
-  static async sharePhoto({ photo, sticker, attachment, caption }) {
-    const { result } = await RNSnapchatKit.sharePhotoResolved(
+  static getAccessToken() {
+    return RNSnapchatKit.getAccessToken();
+  }
+
+  static sharePhoto({ photo, sticker, attachment, caption }) {
+    return RNSnapchatKit.sharePhotoResolved(
       photo && photo.asset,
       photo && photo.url,
       sticker && sticker.image.asset,
@@ -57,15 +34,11 @@ export default class SnapchatKit {
       (sticker && sticker.y) || 0.5,
       attachment,
       caption
-    ).catch((e) => {
-      reject(e);
-    });
-
-    return result;
+    );
   }
 
-  static async shareVideo({ url, sticker, attachment, caption }) {
-    const { result } = await RNSnapchatKit.shareVideoAtUrl(
+  static shareVideo({ url, sticker, attachment, caption }) {
+    return RNSnapchatKit.shareVideoAtUrl(
       url,
       sticker && sticker.image.asset,
       sticker && sticker.image.url,
@@ -73,10 +46,6 @@ export default class SnapchatKit {
       (sticker && sticker.y) || 0.5,
       attachment,
       caption
-    ).catch((e) => {
-      reject(e);
-    });
-
-    return result;
+    );
   }
 }

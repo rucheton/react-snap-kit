@@ -13,46 +13,35 @@ export default class SnapchatKit {
       const succeededListener = this.addListener("LoginSucceeded", (res) => {
         succeededListener.remove();
         failedListener.remove();
-        this.getUserInfo().then(resolve).catch(reject);
+        resolve();
       });
       const failedListener = this.addListener("LoginFailed", (res) => {
         succeededListener.remove();
         failedListener.remove();
-        resolve(false);
+        reject(res);
       });
       RNSnapchatKit.login();
     });
   }
 
+  static getAccessToken() {
+    return RNSnapchatKit.getAccessToken();
+  }
+
   static async isLogged() {
-    const result = await RNSnapchatKit.isUserLoggedIn();
-    const resultJSON = JSON.parse(result);
-    return !!resultJSON.result;
+    return await RNSnapchatKit.isUserLoggedIn();
   }
 
   static async logout() {
-    const result = await RNSnapchatKit.logout();
-    const resultJSON = JSON.parse(result);
-    return !!resultJSON.result;
+    return await RNSnapchatKit.logout();
   }
 
   static getUserInfo() {
-    return new Promise((resolve, reject) => {
-      RNSnapchatKit.fetchUserData()
-        .then((tmp) => {
-          const data = JSON.parse(tmp);
-          if (data === null) {
-            resolve(null);
-          } else {
-            resolve(data);
-          }
-        })
-        .catch((e) => reject(e));
-    });
+    return RNSnapchatKit.fetchUserData();
   }
 
-  static async sharePhoto({ photo, sticker, attachment, caption }) {
-    const result = await RNSnapchatKit.sharePhotoResolved(
+  static sharePhoto({ photo, sticker, attachment, caption }) {
+    return RNSnapchatKit.sharePhotoResolved(
       photo && photo.asset,
       photo && photo.url,
       sticker && sticker.image.asset,
@@ -61,18 +50,11 @@ export default class SnapchatKit {
       (sticker && sticker.y) || 0.5,
       attachment,
       caption
-    ).catch((e) => {
-      reject(e);
-    });
-    const resultJSON = JSON.parse(result);
-    if (!!resultJSON.error) {
-      throw resultJSON.error;
-    }
-    return !!resultJSON.result;
+    );
   }
 
-  static async shareVideo({ url, sticker, attachment, caption }) {
-    const result = await RNSnapchatKit.shareVideoAtUrl(
+  static shareVideo({ url, sticker, attachment, caption }) {
+    return RNSnapchatKit.shareVideoAtUrl(
       url,
       sticker && sticker.image.asset,
       sticker && sticker.image.url,
@@ -80,13 +62,6 @@ export default class SnapchatKit {
       (sticker && sticker.y) || 0.5,
       attachment,
       caption
-    ).catch((e) => {
-      reject(e);
-    });
-    const resultJSON = JSON.parse(result);
-    if (!!resultJSON.error) {
-      throw resultJSON.error;
-    }
-    return !!resultJSON.result;
+    );
   }
 }

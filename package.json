@@ -1,8 +1,8 @@
 {
   "name": "react-native-snapchat-kit",
   "title": "React Native Snapchat Kit",
-  "version": "1.0.7",
-  "description": "Bridge to use Snapchat Frameworks in react native",
+  "version": "1.0.8",
+  "description": "Bridge to use Snapchat Login and Creative kits in React Native",
   "main": "index",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

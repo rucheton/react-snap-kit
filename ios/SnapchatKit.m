@@ -39,26 +39,24 @@ RCT_REMAP_METHOD(login,
                                    completion:^(BOOL success, NSError * _Nullable error)
     {
         if(error) {
-            resolve(@{
-                @"result": @(NO),
-                @"error": error.localizedDescription
-            });
+            reject([NSString stringWithFormat: @"%ld", (long)error.code], error.localizedDescription, error);
         } else {
-            resolve(@{@"result": @(YES)});
+            resolve(nil);
         }
     }];
 }
 
-RCT_EXPORT_METHOD(logout) {
+RCT_REMAP_METHOD(logout, logoutResolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
     [SCSDKLoginClient clearToken];
+    resolve(@(YES));
 }
 
 RCT_REMAP_METHOD(isUserLoggedIn,
                  isUserLoggedInResolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject)
 {
-
-    resolve(@{@"result": @([SCSDKLoginClient isUserLoggedIn])});
+    resolve(@([SCSDKLoginClient isUserLoggedIn]));
 }
 
 RCT_REMAP_METHOD(fetchUserData,
@@ -78,20 +76,20 @@ RCT_REMAP_METHOD(fetchUserData,
             NSDictionary *me = data[@"me"];
             NSDictionary *bitmoji = me[@"bitmoji"];
             NSString *bitmojiAvatarUrl = bitmoji[@"avatar"];
-            if (bitmojiAvatarUrl == (id)[NSNull null] || bitmojiAvatarUrl.length == 0 ) bitmojiAvatarUrl = @"(null)";
             resolve(@{
                 @"displayName": me[@"displayName"],
                 @"externalId": me[@"externalId"],
-                @"avatar": bitmojiAvatarUrl
+                @"avatar": bitmojiAvatarUrl ? bitmojiAvatarUrl : @"",
+                @"accessToken": [SCSDKLoginClient getAccessToken]
             });
 
         }
                                          failure:^(NSError * error, BOOL isUserLoggedOut)
         {
-            reject(@"error", @"error", error);
+            reject([NSString stringWithFormat:@"%ld", (long)error.code], error.localizedDescription, error);
         }];
     } else {
-        resolve([NSNull null]);
+        reject(@"401", @"unauthenticated", nil);
     }
 }
 
@@ -102,14 +100,9 @@ RCT_REMAP_METHOD(getAccessToken,
     NSString * accessToken = [SCSDKLoginClient getAccessToken];
 
     if (accessToken) {
-        resolve(@{
-            @"accessToken": accessToken
-        });
+        resolve(accessToken);
     } else {
-        resolve(@{
-            @"accessToken": [NSNull null],
-            @"error": @"No access token"
-        });
+        reject(@"401", @"unauthenticated", nil);
     }
 }
 
@@ -127,7 +120,6 @@ RCT_EXPORT_METHOD(sharePhotoResolved:(NSDictionary *)resolvedPhoto url:(NSString
     NSObject *photo = resolvedPhoto != NULL ? resolvedPhoto : photoUrl;
     NSObject *sticker = stickerResolved != NULL ? stickerResolved : stickerUrl;
     [self shareWithPhoto:photo videoUrl:NULL sticker:sticker stickerPosX:stickerPosX stickerPosY:stickerPosY attachmentUrl:attachmentUrl caption:caption resolver:resolve rejecter:reject];
-
 }
 
 
@@ -193,7 +185,7 @@ RCT_EXPORT_METHOD(shareVideoAtUrl:(NSString *)videoUrl
              reject([NSString stringWithFormat:@"%ld", (long)error.code], error.localizedDescription, error);
          }
          else {
-             resolve(@{ @"result": @(YES)});
+             resolve(nil);
          }
          /* Handle response */
      }];
